@@ -1,8 +1,0 @@
-haoyuh.21
-
-1. in maptiles I use Tileimage* as the value of hash maps it can reduce the memory space
-2. in maptiles.cpp and maptiles.h in the function TileImage* get_match_at_idx I change the argument
-"map<Point<3>, int> tile_avg_map" to "map<Point<3>, int>& tile_avg_map"
-int row ---->   int& row
-int col ---->   int& col
-
