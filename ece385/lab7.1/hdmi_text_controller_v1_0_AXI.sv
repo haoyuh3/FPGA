@@ -268,7 +268,7 @@ begin
           if ( S_AXI_WSTRB[byte_index] == 1 ) begin
             // Respective byte enables are asserted as per write strobes, note the use of the index part select operator
 			// '+:', you will need to understand how this operator works.
-            slv_regs[axi_awaddr[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB]][(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];  //????????????????????
+            slv_regs[axi_awaddr[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB]][(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];  
           end  
       end
   end
@@ -299,7 +299,7 @@ begin
         begin
           if (S_AXI_BREADY && axi_bvalid) 
             //check if bready is asserted while bvalid is high) 
-            //(there is a possibility that bready is always asserted high)   //???????????
+            //(there is a possibility that bready is always asserted high)   
             begin
               axi_bvalid <= 1'b0; 
             end  
@@ -413,12 +413,11 @@ logic [9:0] offset_x_1;
 logic [7:0] offset_r;
 logic IVN;
 logic [10:0]char_e;
-//integer char_index;
-// to get address we have x,y I use division at first and update bit shift after demo -----haven't test
-assign column = {{6'b000000},{Drawx[9:6]}};    //assign column = Drawx / 32; locate the row  -- get the num of word
-	assign offset_x = Drawx & (9'b000011111) ;        //assign offset_x= Drawx % 32;                        // get the offset of word
-assign row = {{5'b00000},{Drawy[9:4]}};  //assign row = Drawy / 16; locate column
-	assign offset_y = Drawy & (9'b000001111);//assign offset_y= Drawy % 16;                        // get the offset word
+// to get address we have x,y
+assign column = Drawx >> 5;         //assign column = Drawx / 32;                         // locate the row  -- get the num of word
+assign offset_x = Drawx & (9'b000011111);           //assign offset_x= Drawx % 32;                        // get the offset of word
+assign row = Drawy >> 4;             //assign row = Drawy / 16;                            // locate column
+assign offset_y = Drawy & (9'b000001111);           //assign offset_y= Drawy % 16;                        // get the offset word
 assign address[9:0] = row * 20 + column ;           //convert to address
 assign cur_data = slv_regs[address];
 
