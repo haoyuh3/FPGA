@@ -76,10 +76,10 @@ module control( input logic Clk, Reset_Load_Clear, Run ,
 		G1:       next_state=H;
 		H:        next_state=H1;
 		H1:       next_state=I;
-        I:        next_state=I1;
-        I1:       next_state=J; 	
-        J:  if(~Run)
-                    next_state=A;	
+        	I:        next_state=I1;
+        	I1:       next_state=J; 	
+        	J:  if(~Run)
+                    	  next_state=A;	
         
 		
 		endcase
