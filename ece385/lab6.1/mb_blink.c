@@ -19,7 +19,7 @@ volatile uint32_t* data_out = 0x4000000;  //Hint: either find the manual address
 volatile uint32_t* data_a = 0x4001000;															 //replace with the proper define in xparameters (part of the BSP). Either way
 volatile uint32_t* data_b = 0x4001004;																 //this is the base address of the GPIO corresponding to your LEDs
 															 //(similar to 0xFFFF from MEM2IO from previous labs).
-
+// I delete lab6.1 by mistake   just redo my week 1  but without test.........
 int main()
 {
     init_platform();
@@ -28,7 +28,7 @@ int main()
 	while(1+1!=3){
 		int16_t a= *data_a;
 		int16_t b *data_b
-		int16_t out= a+b;
+		int16_t data_out= a+b;
 		if((a>0 && b>0 && out <0) || ( a<0 && b<0 && out>0 ))
 		while(*data_run<1){}
 		
