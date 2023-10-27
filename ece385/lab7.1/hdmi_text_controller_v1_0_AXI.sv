@@ -417,7 +417,7 @@ logic [10:0]char_e;
 // to get address we have x,y I use division at first and update bit shift after demo -----haven't test
 assign column = {{6'b000000},{Drawx[9:6]}};    //assign column = Drawx / 32; locate the row  -- get the num of word
 assign offset_x = Drawx & (9'b000111111)         //assign offset_x= Drawx % 32;                        // get the offset of word
-assign column = {{5'b00000},{Drawy[9:4]}};  //assign row = Drawy / 16; locate column
+assign row = {{5'b00000},{Drawy[9:4]}};  //assign row = Drawy / 16; locate column
 assign offset_y = Drawy & (9'b000011111)//assign offset_y= Drawy % 16;                        // get the offset word
 assign address[9:0] = row * 20 + column ;           //convert to address
 assign cur_data = slv_regs[address];
