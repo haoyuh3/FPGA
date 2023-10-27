@@ -146,16 +146,16 @@ BYTE MAXreg_rd(BYTE reg) {
 	XSpi_SetSlaveSelectReg(&SpiInstance, SlaveselectMask1); //tells us if the slave can be reached
 	XSpi_SetSlaveSelect(&SpiInstance, 0x00000001);
 
-    writebuffer[0] = reg;
-    writebuffer[1] = 0;
+    	writebuffer[0] = reg;
+    	writebuffer[1] = 0;
 	readbuffer[0] = 0;
 	readbuffer[1] = 0;
-    int Status1=XSpi_Transfer(&SpiInstance, writebuffer, readbuffer, 2);
-	if(Status1!=0){
-		xil_printf ("error\n");
-	}else{
-		val=readbuffer[1];
-	}
+        int Status1=XSpi_Transfer(&SpiInstance, writebuffer, readbuffer, 2);
+		if(Status1!=0){
+			xil_printf ("error\n");
+		}else{
+			val=readbuffer[1];
+		}
 	XSpi_SetSlaveSelect(&SpiInstance, 0x00000000);
 	XSpi_SetSlaveSelectReg(&SpiInstance, SlaveDeselectMask);
 
