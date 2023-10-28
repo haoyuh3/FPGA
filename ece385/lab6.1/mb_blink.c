@@ -17,7 +17,7 @@
 
 volatile uint32_t* data_run = 0x4000000;  //Hint: either find the manual address (via the memory map in the block diagram, or
 volatile uint32_t* data_sw = 0x4001000;															 //replace with the proper define in xparameters (part of the BSP). Either way
-volatile uint32_t* data_out = 0x4001004;																 //this is the base address of the GPIO corresponding to your LEDs
+volatile uint32_t* data_out = 0x4001008; //offset 8 according to datasheet																 //this is the base address of the GPIO corresponding to your LEDs
 															 //(similar to 0xFFFF from MEM2IO from previous labs).
 // I delete lab6.1 by mistake   just redo my week 1  but without test......... and 
 {
