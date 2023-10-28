@@ -85,7 +85,7 @@ void MAXreg_wr(BYTE reg, BYTE val) {
 	//xil_printf("slave select mask: %lu\n",XSpi_GetSlaveSelectReg(&SpiInstance));
 	XSpi_SetSlaveSelect(&SpiInstance, 0x00000001);
 	//construct send buffer
-	writeBuffer[0]=reg+2; //first byte is the destenation register, plus two for reserved reges
+	writeBuffer[0]=reg+2; //first byte is the destenation register, plus two for write mode
 	writeBuffer[1]=val; //2nd byte is the value
 	writeStatus = XSpi_Transfer(&SpiInstance, writeBuffer,NULL,2);
 	//xil_printf ("writeStatus: %d\n", writeStatus);
