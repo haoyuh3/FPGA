@@ -29,7 +29,9 @@ volatile uint32_t* data_out = 0x4001008; //offset 8 according to datasheet						
 		int16_t a= *data_sw;
 		sum=sum+a;
 		*data_out=sum;
-		if((a>0 && b>0 && out <0) || ( a<0 && b<0 && out>0 ))
+		if((a>0 && b>0 && out <0) || ( a<0 && b<0 && out>0 )){
+			//printf(overflow);
+		}
 		while(*data_run<1){}
 		}	
 		
