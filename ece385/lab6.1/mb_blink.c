@@ -15,20 +15,22 @@
 
 #include "platform.h"
 
-volatile uint32_t* data_run = 0x4000000;  //Hint: either find the manual address (via the memory map in the block diagram, or
-volatile uint32_t* data_sw = 0x4001000;															 //replace with the proper define in xparameters (part of the BSP). Either way
-volatile uint32_t* data_out = 0x4001008; //offset 8 according to datasheet																 //this is the base address of the GPIO corresponding to your LEDs
+volatile uint32_t* data_run = 0x40000000;  //Hint: either find the manual address (via the memory map in the block diagram, or
+volatile uint32_t* data_a   = 0x40010000;															 //replace with the proper define in xparameters (part of the BSP). Either way
+volatile uint32_t* data_b   = 0x40010008; //offset 8 according to datasheet	
+volatile uint32_t* data_out = 0x40020000;										//this is the base address of the GPIO corresponding to your LEDs
 															 //(similar to 0xFFFF from MEM2IO from previous labs).
-// I delete lab6.1 by mistake   just redo my week 1  but without test......... but I think the hardware structure is right at least
+// I delete lab6.1 by mistake   just redo my week 1  but without test and 3 gpio channel is enough as local sum variable can be used......... but I think the hardware structure is right at least
 {
     init_platform();
-	int16_t sum=0;
+	*data_out=0;
 	while(*data_run<1){};
 	while(1+1!=3){
-	if(data_run<1){
-		int16_t a= *data_sw;
-		sum=sum+a;
-		*data_out=sum;
+	if(*data_run<1){
+		int16_t a= *data_a;
+		int16_t b= *data_b;
+		int16_t out= a+b;
+		*data_out=out;
 		if((a>0 && b>0 && out <0) || ( a<0 && b<0 && out>0 )){
 			//printf(overflow);
 		}
