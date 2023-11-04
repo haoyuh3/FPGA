@@ -1,27 +1,3 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: ECE-Illinois
-// Engineer: Zuofu Cheng
-// 
-// Create Date: 06/08/2023 12:21:05 PM
-// Design Name: 
-// Module Name: hdmi_text_controller_v1_0_AXI
-// Project Name: ECE 385 - hdmi_text_controller
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// This is a modified version of the Vivado template for an AXI4-Lite peripheral,
-// rewritten into SystemVerilog for use with ECE 385.
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
-
 `timescale 1 ns / 1 ps
 
 module hdmi_text_controller_v1_0_AXI #
@@ -134,8 +110,12 @@ localparam integer OPT_MEM_ADDR_BITS = 11;   //modify to 11 since we have 1200 r
 //----------------------------------------------
 //-- Signals for user logic register space example
 //------------------------------------------------
-logic [C_S_AXI_DATA_WIDTH-1:0]	 slv_regs[8];
+logic [C_S_AXI_DATA_WIDTH-1:0]	 slv_regs[8];    //additional register
+//------------------------------------------------
 logic [C_S_AXI_DATA_WIDTH-1:0]	 reg_data_out;  // data from VRAM
+logic [C_S_AXI_DATA_WIDTH-1:0]	 color_regout;   // register read result
+logic slv_reg_rden;                                      
+logic slv_reg_wren;
 integer	 byte_index;
 logic	 aw_en;
 logic read_ready;                               // read_ready signal -- wait
@@ -219,11 +199,10 @@ end
 assign slv_reg_wren = axi_wready && S_AXI_WVALID && axi_awready && S_AXI_AWVALID;
 //-------------------------------------------provided logic------------------------------------------//
 
-logic [OPT_MEM_ADDR_BITS:0] char_from_VRAM;    // user inut char address output char content
-logic [C_S_AXI_DATA_WIDTH-1:0] reg_data;        // haven't used
+logic [OPT_MEM_ADDR_BITS:0] address_to_char;    // user inut char address output char content
+logic [C_S_AXI_DATA_WIDTH-1:0] char_from_VRAM;  // haven't used
 logic [OPT_MEM_ADDR_BITS:0] Address_to_VRAM;    // write or read address
 logic [3:0] wea_en;                            // port A wea signal
-logic [C_S_AXI_ADDR_WIDTH-1:0] address_to_char;
 
 // Address_to_VRAM depend on write or read mode or destination (reg/VRAM)
 always_comb 
@@ -239,7 +218,7 @@ begin
   end
 end
 blk_mem_gen_0 ram0(
-                    .addra(Address_to_VRAM[10:0]),  //the most significant bit is used for 8 additional register
+                    .addra(Address_to_VRAM),  //the most significant bit is used for 8 additional register
                     .clka(S_AXI_ACLK),
                     .dina(S_AXI_WDATA),
                     .douta(reg_data_out)
@@ -267,7 +246,8 @@ blk_mem_gen_0 ram0(
      if (slv_reg_wren && axi_awaddr[ADDR_LSB+OPT_MEM_ADDR_BITS])
        begin
          for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-           if ( S_AXI_WSTRB[byte_index] == 1 ) begin
+           if ( S_AXI_WSTRB[byte_index] == 1 ) 
+           begin
              slv_regs[axi_awaddr[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB]-2048][(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8]; //2048 is the most significant bit
            end  
        end
@@ -343,10 +323,12 @@ begin
         end                
     end
 end    
+logic address_assert;
+assign address_assert = ~axi_arready && S_AXI_ARVALID;
 // //wait two cycle to get daata ready count start from when address is asserted
 always_ff @( posedge S_AXI_ACLK ) 
 begin
-  if(~axi_arready && S_AXI_ARVALID) begin  
+  if(address_assert) begin  
     count <= 1;  
   end
   if(count == 1) begin
@@ -361,6 +343,16 @@ begin
     count <= 0;
   end
 end
+// -----------------read register--------------------
+assign slv_reg_rden = axi_arready & S_AXI_ARVALID & ~axi_rvalid;
+always_comb
+begin
+      // Address decoding for reading registers
+      if(slv_reg_rden && axi_araddr[ADDR_LSB+OPT_MEM_ADDR_BITS])                    // read color register
+     color_regout <= slv_regs[axi_araddr[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB]-2048];
+end
+
+// Output register or memory read data
 
 //------------------------------------provided--------------------------------------//
 // Output register or memory read data
@@ -375,92 +367,113 @@ begin
       // When there is a valid read address (S_AXI_ARVALID) with 
       // acceptance of read address by the slave (axi_arready), 
       // output the read dada 
-      if (read_ready) //wait end
+      if (read_ready && ~axi_araddr[ADDR_LSB+OPT_MEM_ADDR_BITS] ) //wait end 
         begin
-          axi_rdata <= reg_data_out;     // register read data
-        end   
+          axi_rdata <= reg_data_out;     // OCM read data
+        end 
+      else if(slv_reg_rden && axi_araddr[ADDR_LSB+OPT_MEM_ADDR_BITS])
+        begin
+          axi_rdata <= color_regout;     // color register read data
+        end  
     end
 end    
 //------------------------------------provided--------------------------------------//
-//local logic for color mapper
-//logic [C_S_AXI_DATA_WIDTH-1:0]cur_data;
-//logic [9:0]row;
-//logic [9:0]column;
-//logic [7:0] char;
-//logic [9:0] offset_x;
-//logic [9:0] offset_y;
-//logic [10:0] fon_address;
-//logic [7:0] print_data;
-//logic [9:0] offset_x_1;
-//logic [7:0] offset_r;
-//logic IVN;
-//logic [10:0]char_e;
-////Add user logic here
-//// to get address we have x,y
-//assign column = DrawX >> 4;                                  //modify to 16 2 byte a row now
-//assign offset_x = DrawX & (9'b000001111);                    // get the offset of word
-//assign row = DrawY >> 4;                                    // /16
-//assign offset_y = DrawY & (9'b000001111);                  // get the offset word
-//assign address_to_char[9:0] = row * 20 + column ;                 //convert to address
-//assign cur_data = char_from_VRAM;
+//logic for platte
+logic [3:0] fgd_index, bkg_index;
+logic [31:0]F_data, B_data;
+logic [11:0]F_rgb, B_rgb;
+// //local logic for color mapper
+logic [C_S_AXI_DATA_WIDTH-1:0]cur_data;
+logic [9:0]row;
+logic [9:0]column;
+logic [15:0] char;
+logic [9:0] offset_x;
+logic [9:0] offset_y;
+logic [10:0] fon_address;
+logic [7:0] print_data;             // char data
+logic [9:0] offset_x_1;
+logic [7:0] offset_r;
+logic IVN;
+logic [10:0]char_e;
 
+//Add user logic here                 
 
-//    always_comb
-//    begin
-//         if( offset_x<=7 && offset_x >= 0) begin
-//            char = cur_data[7:0];
-//            offset_x_1=offset_x;
-//         end
-//         else if( offset_x <= 15 && offset_x >= 8)
-//         begin 
-//            char = cur_data[15:8]; 
-//            offset_x_1=offset_x-8;
-//         end
-//         else if( offset_x <= 23 && offset_x >= 16) begin
-//            char = cur_data[23:16];
-//            offset_x_1=offset_x-16;
-//         end
-//         else begin
-//            char = cur_data[31:24];
-//            offset_x_1=offset_x-24;
-//         end 
-//         IVN = char[7];                  //get inverse bit
-//         char_e= {{char[6:0]},{4'b0000}};
-//         fon_address=char_e+ offset_y; // convert to fon address   
-//    end
+assign column = DrawX / 16 ;                                 // column index     
+assign offset_x = DrawX % 16;                               // column offset          
+assign row = DrawY / 16;                                    // row index
+assign offset_y = DrawY % 16 ;                              // row offset
+assign address_to_char  = row * 40 + column  ;                              
+assign cur_data = char_from_VRAM;
+always_comb
+   begin
+        if( offset_x<=7 && offset_x >= 0) begin
+          char = cur_data[15:0];
+          offset_x_1=offset_x;
+          IVN = char[15];                               //get inverse bit
+                                                        // get color
+          fgd_index = cur_data[7:4];
+          bkg_index = cur_data[3:0];
+        end
+        else  if(offset_x>=8 && offset_x <=15 )
+        begin 
+          char = cur_data[31:16]; 
+          offset_x_1=offset_x-8;
+          IVN = char[31]; 
+          fgd_index = cur_data[23:20];
+          bkg_index = cur_data[19:16];
+        end
+        F_data = slv_regs[fgd_index/2];                 // one register two color
+        B_data = slv_regs[bkg_index/2];                 // get RGB value
+        
+        
+        if((fgd_index % 2) == 0)begin
+                F_rgb = F_data[12:1];
+        end
+        else begin
+                F_rgb = F_data[24:13];
+        end 
+        
+        if((bkg_index % 2) == 0)begin
+                B_rgb = B_data[12:1];
+        end
+        else begin
+                B_rgb = B_data[24:13];
+        end             
+        char_e= {{char[14:8]},{4'b0000}};
+        fon_address=char_e + offset_y; // convert to fon address   
+   end
 
-//// get the print data
-//    font_rom my_font( .addr(fon_address), .data(print_data));                  
-//// draw x draw y
-//    always_comb
-//    begin
-//        offset_r=7-offset_x_1;
-//        if(print_data[offset_r]==1)begin
-//            // call control bit
-//            if(IVN==0)begin
-//                RED=slv_reg[0][24:21];
-//                GREEN=slv_reg[0][20:17];
-//                BLUE=slv_regs[0][16:13];
-//            end
-//            else begin
-//                RED=slv_regs[0][12:9];
-//                GREEN=slv_regs[0][8:5];
-//                BLUE=slv_regs[0][4:1];
-//            end
-//        end
-//        else begin
-//            if(IVN==0)
-//            begin
-//                RED=slv_regs[0][12:9];
-//                GREEN=slv_regs[0][8:5];
-//                BLUE=slv_regs[0][4:1];
-//            end
-//            else begin
-//                RED=slv_regs[0][24:21];
-//                GREEN=slv_regs[0][20:17];
-//                BLUE=slv_regs[0][16:13];
-//            end
-//         end
-//    end
-//// User logic ends
+// get the print data
+   font_rom my_font( .addr(fon_address), .data(print_data));                  
+// draw x draw y
+
+   always_comb
+   begin
+       offset_r=7-offset_x_1;
+       if(print_data[offset_r]==1)begin  // have data
+            if(IVN == 0)begin
+                   Red = F_rgb[11:8];
+                   Green = F_rgb[7:4];
+                   Blue = F_rgb[3:0]; 
+            end
+            else begin
+                   Red =   B_rgb[11:8];
+                   Green = B_rgb[7:4];
+                   Blue = B_rgb[3:0];  
+            end
+        end
+        else begin
+            if(IVN == 0)begin
+                   Red = B_rgb[11:8];
+                   Green = B_rgb[7:4];
+                   Blue = B_rgb[3:0]; 
+            end
+            else begin
+                   Red = F_rgb[11:8];
+                   Green = F_rgb[7:4];
+                   Blue = F_rgb[3:0]; 
+            end
+        end
+   end
+
 endmodule
