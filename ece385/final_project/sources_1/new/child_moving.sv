@@ -79,38 +79,32 @@ module  child_moving ( input logic Reset, frame_clk,
 				     Ball_X_Motion <= -10'h1;
 				     BallY <= 10'd404;
                      Ball_Y_Motion <= 10'd0;
-                  end  
-
-
+                  end
+                  
+                  				 
               
-				 
-				 
-				 if(BallX == 10'd1000)begin  //reach boundry
+				 BallY <= (BallY + Ball_Y_Motion);  // Update ball position
+				 BallX <= (BallX + Ball_X_Motion);
+			     
+			     if(~update_hit && (keycode != 8'h16))
+                     BallY <= 10'd404; 
+			     
+			     if(BallX == 10'd1000)begin  //reach boundry
 				     BallY <= 10'd404;
 			         BallX <= start_X;
 //			         Ball_X_Motion <= -10'h1;
 //                   Ball_Y_Motion <= 10'd0;
 				 end
 				 
-				 if(BallY >= 10'd600)begin // hit bottom?
+				 if(BallY >= 10'd600) begin // hit bottom?
 				     BallY <= 10'd404;
 			         BallX <= start_X;
 //			         Ball_X_Motion <= -10'h1;
-//                     Ball_Y_Motion <= 10'd0;
+                     Ball_Y_Motion <= 10'd0;
                      update_hit <= 1'b1;
-				 end
-				 else begin
-				    BallY <= (BallY + Ball_Y_Motion);  // Update ball position
-				    BallX <= (BallX + Ball_X_Motion);
-				 end
-				 
-			
+                 end
 		end  
     end
-    
-    
-    
-    
     
 endmodule
 
