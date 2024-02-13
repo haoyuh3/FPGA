@@ -15,7 +15,7 @@
 // 
 // Revision:
 // Revision 0.01 - File Created
-// Additional Comments:
+// Additional Comments: when Cin is high, It function as substracter
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
